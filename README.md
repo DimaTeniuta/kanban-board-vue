@@ -1,1 +1,1 @@
-# kanban-board-vue
+# Kanban board
