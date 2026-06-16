@@ -1,12 +1,25 @@
+<script setup lang="ts">
+import { HeaderBar } from 'widgets/header';
+import { ProgressCircular } from 'shared/ui/progress-circular';
+</script>
+
 <template>
   <v-app>
-    <v-main>
-      <v-container class="py-8">
-        <v-card max-width="640" class="mx-auto">
-          <v-card-title>Kanban Board</v-card-title>
-          <v-card-text>Vuetify successfully connected.</v-card-text>
-        </v-card>
+    <div class="h-screen my-0 mx-auto max-w-screen-lg">
+      <HeaderBar />
+
+      <v-container max-width="1920px">
+        <v-main class="h-screen">
+          <RouterView v-slot="{ Component }">
+            <template v-if="Component">
+              <Suspense>
+                <component :is="Component" />
+                <template #fallback><ProgressCircular size="large" /></template>
+              </Suspense>
+            </template>
+          </RouterView>
+        </v-main>
       </v-container>
-    </v-main>
+    </div>
   </v-app>
 </template>

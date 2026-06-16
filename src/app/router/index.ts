@@ -1,0 +1,19 @@
+import { defineAsyncComponent } from 'vue';
+import { createRouter, createWebHistory } from 'vue-router';
+
+import { ROUTES } from 'shared/constants/routes';
+
+// NOTE: warning about defineAsyncComponent from vue-router is expected
+// we use it in order to to use Suspense during downloading the component
+export const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: `${ROUTES.register}`,
+      name: 'RegisterPage',
+      component: defineAsyncComponent({
+        loader: () => import('pages/register/RegisterPage.vue')
+      })
+    }
+  ]
+});
