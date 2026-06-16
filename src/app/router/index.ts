@@ -14,6 +14,13 @@ export const router = createRouter({
       component: defineAsyncComponent({
         loader: () => import('pages/register/RegisterPage.vue')
       })
+    },
+    {
+      path: `${ROUTES.login}`,
+      name: 'LoginPage',
+      component: defineAsyncComponent({
+        loader: () => import('pages/login/LoginPage.vue')
+      })
     }
   ]
 });

@@ -1,30 +1,30 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 
-import { RegisterForm } from 'widgets/auth';
+import { LoginForm } from 'widgets/auth';
 import { ROUTES } from 'shared/constants/routes';
 
 const router = useRouter();
 
-const handleNavigateToLogin = (): void => {
-  router.push({ path: ROUTES.login });
+const handleNavigateToRegister = (): void => {
+  router.push({ path: ROUTES.register });
 };
 </script>
 
 <template>
-  <div class="register-page">
+  <div class="login-page">
     <v-card class="card" elevation="8" rounded="xl">
       <v-card-text class="py-10 px-8">
         <div class="text-center mb-8">
-          <h1 class="text-headline-large font-weight-bold">Register</h1>
-          <p class="text-body-medium">Create an account to start managing your boards</p>
+          <h1 class="text-headline-large font-weight-bold">Login</h1>
+          <p class="text-body-medium">Sign in to manage your boards</p>
         </div>
 
-        <RegisterForm />
+        <LoginForm />
 
         <div class="d-flex justify-center items-center mt-8">
-          <p class="my-0 mt-1">Already have an account?</p>
-          <v-btn variant="text" size="small" color="primary" @click="handleNavigateToLogin">Login</v-btn>
+          <p class="my-0 mt-1">Don't have an account?</p>
+          <v-btn variant="text" size="small" color="primary" @click="handleNavigateToRegister">Register</v-btn>
         </div>
       </v-card-text>
     </v-card>
@@ -32,7 +32,7 @@ const handleNavigateToLogin = (): void => {
 </template>
 
 <style scoped lang="scss">
-.register-page {
+.login-page {
   display: flex;
   align-items: center;
   justify-content: center;
