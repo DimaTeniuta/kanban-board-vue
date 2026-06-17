@@ -16,10 +16,12 @@
     "@tanstack/vue-query": "^5.101.0",
     "@vee-validate/zod": "^4.15.1",
     "axios": "^1.18.0",
+    "pinia": "^3.0.4",
     "vee-validate": "^4.15.1",
     "vue": "^3.5.34",
     "vue-router": "^5.1.0",
-    "zod": "^4.4.3"
+    "vue3-toastify": "^0.2.9",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -2,8 +2,17 @@
 import { toTypedSchema } from '@vee-validate/zod';
 import { useField, useForm } from 'vee-validate';
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { toast } from 'vue3-toastify';
 
-import { type RegisterSchema, registerSchema } from './schema';
+import { useApiMutation } from 'shared/api';
+import { API_ROUTES } from 'shared/api/apiRoutes';
+import { ROUTES } from 'shared/constants/routes';
+import { getApiErrorMessage } from 'shared/utils/getApiErrorMessage';
+
+import { type RegisterResult, type RegisterSchema, registerSchema } from './types';
+
+const router = useRouter();
 
 const { handleSubmit } = useForm({
   validationSchema: toTypedSchema(registerSchema)
@@ -16,8 +25,18 @@ const { value: passwordRepeat, errorMessage: passwordRepeatErrorMessage } = useF
 const showPassword = ref<boolean>(false);
 const showPasswordRepeat = ref<boolean>(false);
 
+const { mutate: register, isPending } = useApiMutation<RegisterResult, RegisterSchema>(API_ROUTES.register(), 'post');
+
 const onSubmit = handleSubmit((values: RegisterSchema) => {
-  console.log(2222, values);
+  register(values, {
+    onSuccess: (data) => {
+      toast.success(data.message);
+      router.push({ path: ROUTES.login });
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error));
+    }
+  });
 });
 </script>
 
@@ -71,6 +90,8 @@ const onSubmit = handleSubmit((values: RegisterSchema) => {
       @click:append-inner="showPasswordRepeat = !showPasswordRepeat"
     />
 
-    <v-btn class="mt-6" type="submit" variant="flat" color="primary" size="large" block> Register </v-btn>
+    <v-btn class="mt-6" type="submit" variant="flat" color="primary" size="large" block :loading="isPending"
+      >Register</v-btn
+    >
   </v-form>
 </template>

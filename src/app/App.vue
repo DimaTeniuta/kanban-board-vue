@@ -9,11 +9,11 @@ import { ProgressCircular } from 'shared/ui/progress-circular';
 
     <v-container max-width="1920px">
       <v-main class="h-screen">
-        <RouterView v-slot="{ Component }">
+        <RouterView v-slot="{ Component, route }">
           <template v-if="Component">
             <Suspense>
-              <component :is="Component" />
-              <template #fallback><ProgressCircular size="large" /></template>
+              <component :is="Component" :key="route.fullPath" />
+              <template #fallback><ProgressCircular size="large" color="primary" /></template>
             </Suspense>
           </template>
         </RouterView>

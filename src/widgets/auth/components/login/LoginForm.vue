@@ -2,8 +2,20 @@
 import { toTypedSchema } from '@vee-validate/zod';
 import { useField, useForm } from 'vee-validate';
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { toast } from 'vue3-toastify';
 
-import { type LoginSchema, loginSchema } from './schema';
+import { useApiMutation } from 'shared/api';
+import { API_ROUTES } from 'shared/api/apiRoutes';
+import { ROUTES } from 'shared/constants/routes';
+import { useAuthStore, useUserStore } from 'shared/store';
+import { getApiErrorMessage } from 'shared/utils/getApiErrorMessage';
+
+import { type LoginResult, type LoginSchema, loginSchema } from './types';
+
+const router = useRouter();
+const userStore = useUserStore();
+const authStore = useAuthStore();
 
 const { handleSubmit } = useForm({
   validationSchema: toTypedSchema(loginSchema)
@@ -13,8 +25,19 @@ const { value: password, errorMessage: passwordErrorMessage } = useField('passwo
 
 const showPassword = ref<boolean>(false);
 
+const { mutate: login, isPending } = useApiMutation<LoginResult, LoginSchema>(API_ROUTES.login(), 'post');
+
 const onSubmit = handleSubmit((values: LoginSchema) => {
-  console.log(2222, values);
+  login(values, {
+    onSuccess: (data) => {
+      userStore.setUser(data.user);
+      authStore.setTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken });
+      router.push({ path: ROUTES.boards });
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error));
+    }
+  });
 });
 </script>
 
@@ -44,6 +67,8 @@ const onSubmit = handleSubmit((values: LoginSchema) => {
       @click:append-inner="showPassword = !showPassword"
     />
 
-    <v-btn class="mt-6" type="submit" variant="flat" color="primary" size="large" block> Login </v-btn>
+    <v-btn class="mt-6" type="submit" variant="flat" color="primary" size="large" :loading="isPending" block>
+      Login
+    </v-btn>
   </v-form>
 </template>
