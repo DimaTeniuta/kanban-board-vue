@@ -3,5 +3,6 @@ export const API_ROUTES = {
   login: (): string => '/auth/login',
   refreshToken: (): string => '/auth/refresh-token',
   logout: (): string => '/auth/logout',
-  boards: (): string => '/boards'
+  boards: (): string => '/boards',
+  boardById: (id: string): string => `/boards/${id}`
 } as const;

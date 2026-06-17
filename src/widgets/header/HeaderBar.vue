@@ -1,25 +1,34 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 
+import { API_ROUTES } from 'shared/api/apiRoutes.ts';
+import { useApiMutation } from 'shared/api/index.ts';
 import { ROUTES } from 'shared/constants/routes';
+import { useAuthStore } from 'shared/store/authStore.ts';
 
 import AuthNavigation from './components/auth-navigation/AuthNavigation.vue';
 
-// TODO: fix it
-const isAuthenticated = computed(() => {
-  return false;
-});
-
+const { isAuthenticated } = storeToRefs(useAuthStore());
+const { clearStore } = useAuthStore();
 const router = useRouter();
+
+const { mutate: logout, isPending } = useApiMutation(API_ROUTES.logout(), 'post');
 
 const handleNavigateToProfile = () => {
   router.push({ path: ROUTES.profile });
 };
 
-// TODO: implement logout
 const handleLogout = () => {
-  console.log('logout');
+  logout(
+    {},
+    {
+      onSettled: () => {
+        clearStore();
+        router.push({ path: ROUTES.login });
+      }
+    }
+  );
 };
 </script>
 
@@ -34,7 +43,14 @@ const handleLogout = () => {
             <v-icon icon="mdi-account-circle" />
           </v-avatar>
 
-          <v-btn title="Logout" density="comfortable" icon="mdi-logout" color="error" @click="handleLogout" />
+          <v-btn
+            title="Logout"
+            density="comfortable"
+            icon="mdi-logout"
+            :loading="isPending"
+            color="error"
+            @click="handleLogout"
+          />
         </div>
 
         <AuthNavigation v-else />

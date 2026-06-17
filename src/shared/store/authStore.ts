@@ -1,31 +1,46 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
-export const useAuthStore = defineStore('auth', () => {
-  const isAuthenticated = ref<boolean>(false);
-  const setIsAuthenticated = (nextIsAuthenticated: boolean): void => {
-    isAuthenticated.value = nextIsAuthenticated;
-  };
+import type { User } from 'shared/types/user';
 
-  const accessToken = ref<string | null>(null);
-  const refreshToken = ref<string | null>(null);
-  const setTokens = (nextTokens: { accessToken: string; refreshToken: string }): void => {
-    accessToken.value = nextTokens.accessToken;
-    refreshToken.value = nextTokens.refreshToken;
-  };
+export const useAuthStore = defineStore(
+  'auth',
+  () => {
+    const user = ref<User | null>(null);
+    const setUser = (nextUser: User): void => {
+      user.value = nextUser;
+    };
 
-  const clearStore = (): void => {
-    accessToken.value = null;
-    refreshToken.value = null;
-    isAuthenticated.value = false;
-  };
+    const accessToken = ref<string | null>(null);
+    const refreshToken = ref<string | null>(null);
+    const isAuthenticated = computed(() => Boolean(accessToken.value));
 
-  return {
-    isAuthenticated,
-    accessToken,
-    refreshToken,
-    setIsAuthenticated,
-    setTokens,
-    clearStore
-  };
-});
+    const setTokens = (nextTokens: { accessToken: string; refreshToken: string }): void => {
+      accessToken.value = nextTokens.accessToken;
+      refreshToken.value = nextTokens.refreshToken;
+    };
+
+    const clearStore = (): void => {
+      accessToken.value = null;
+      refreshToken.value = null;
+      user.value = null;
+    };
+
+    return {
+      isAuthenticated,
+      accessToken,
+      refreshToken,
+      user,
+      setUser,
+      setTokens,
+      clearStore
+    };
+  },
+  {
+    persist: {
+      key: 'auth',
+      storage: sessionStorage,
+      pick: ['accessToken', 'refreshToken', 'user']
+    }
+  }
+);

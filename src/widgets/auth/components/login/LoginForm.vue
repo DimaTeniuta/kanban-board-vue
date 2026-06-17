@@ -8,13 +8,12 @@ import { toast } from 'vue3-toastify';
 import { useApiMutation } from 'shared/api';
 import { API_ROUTES } from 'shared/api/apiRoutes';
 import { ROUTES } from 'shared/constants/routes';
-import { useAuthStore, useUserStore } from 'shared/store';
+import { useAuthStore } from 'shared/store';
 import { getApiErrorMessage } from 'shared/utils/getApiErrorMessage';
 
 import { type LoginResult, type LoginSchema, loginSchema } from './types';
 
 const router = useRouter();
-const userStore = useUserStore();
 const authStore = useAuthStore();
 
 const { handleSubmit } = useForm({
@@ -30,7 +29,7 @@ const { mutate: login, isPending } = useApiMutation<LoginResult, LoginSchema>(AP
 const onSubmit = handleSubmit((values: LoginSchema) => {
   login(values, {
     onSuccess: (data) => {
-      userStore.setUser(data.user);
+      authStore.setUser(data.user);
       authStore.setTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken });
       router.push({ path: ROUTES.boards });
     },

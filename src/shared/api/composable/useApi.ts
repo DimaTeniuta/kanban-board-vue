@@ -7,6 +7,9 @@ import {
   type UseQueryOptions,
   type UseQueryReturnType
 } from '@tanstack/vue-query';
+import type z from 'zod';
+
+import { VALIDATION_ERROR_NAME } from 'shared/constants/api';
 
 import { api } from '../api';
 
@@ -22,12 +25,14 @@ export const useApiQuery = <TData, TTransformed = TData, TError = ApiError>({
   queryKey,
   url,
   params,
+  schema,
   options,
   transform
 }: {
   queryKey: QueryKey;
   url: string;
   params?: Record<string, unknown>;
+  schema?: z.ZodSchema<TData>;
   options?: QueryOptions<TTransformed, TError>;
   transform?: (data: TData) => TTransformed;
 }): UseQueryReturnType<TTransformed, TError> => {
@@ -35,6 +40,19 @@ export const useApiQuery = <TData, TTransformed = TData, TError = ApiError>({
     queryKey,
     queryFn: async () => {
       const data = await api.get<TData>(url, params);
+
+      if (schema && data) {
+        const validated = schema.safeParse(data);
+
+        if (!validated.success) {
+          const validationError = new Error(validated.error.message);
+
+          validationError.name = VALIDATION_ERROR_NAME;
+          console.error(validationError);
+          throw validationError;
+        }
+      }
+
       return transform ? transform(data) : (data as TTransformed);
     },
     ...options

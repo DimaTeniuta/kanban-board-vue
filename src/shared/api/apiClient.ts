@@ -2,7 +2,7 @@ import axios from 'axios';
 
 import { router } from 'app/router';
 import { ROUTES } from 'shared/constants/routes';
-import { useAuthStore, useUserStore } from 'shared/store';
+import { useAuthStore } from 'shared/store';
 
 import { API_ROUTES } from './apiRoutes';
 
@@ -16,9 +16,9 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    const { accessToken } = useAuthStore();
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
+    const authStore = useAuthStore();
+    if (authStore.accessToken) {
+      config.headers.Authorization = `Bearer ${authStore.accessToken}`;
     }
     return config;
   },
@@ -32,23 +32,22 @@ interface RefreshTokenResponse {
   };
 }
 
-const refreshToken = async (): Promise<{ status: boolean; refreshToken?: string | undefined }> => {
+const refreshToken = async (): Promise<{ status: boolean }> => {
   try {
-    const { refreshToken, setTokens } = useAuthStore();
-    const { user } = useUserStore();
+    const authStore = useAuthStore();
 
-    if (!refreshToken || !user) {
+    if (!authStore.refreshToken || !authStore.user) {
       return { status: false };
     }
 
     const response = await apiClient.post<RefreshTokenResponse>(API_ROUTES.refreshToken(), {
-      userId: user.id,
-      refreshToken
+      userId: authStore.user.id,
+      refreshToken: authStore.refreshToken
     });
 
     if (response.status === 200 || response.status === 201) {
       const tokenData = response.data.data;
-      setTokens({ accessToken: tokenData.accessToken, refreshToken: tokenData.refreshToken });
+      authStore.setTokens({ accessToken: tokenData.accessToken, refreshToken: tokenData.refreshToken });
       return { status: true };
     } else {
       console.error('Refresh token failed', response);
@@ -100,29 +99,27 @@ apiClient.interceptors.response.use(
         const tokens = await refreshToken();
 
         if (tokens.status) {
-          const { accessToken } = useAuthStore();
-          if (!accessToken) {
+          const authStore = useAuthStore();
+          if (!authStore.accessToken) {
             throw new Error('Token is not found');
           }
 
-          callFailedRequests(accessToken);
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          callFailedRequests(authStore.accessToken);
+          originalRequest.headers.Authorization = `Bearer ${authStore.accessToken}`;
 
           return apiClient(originalRequest);
         } else {
-          const { clearStore, accessToken } = useAuthStore();
-          if (!isLoggingOut && accessToken) {
+          const authStore = useAuthStore();
+          if (!isLoggingOut && authStore.accessToken) {
             isLoggingOut = true;
             await apiClient.post(API_ROUTES.logout());
           }
-          const { clearUser } = useUserStore();
-          clearStore();
-          clearUser();
+          authStore.clearStore();
           router.push({ path: ROUTES.login });
         }
       } catch (error) {
-        const { clearStore, accessToken } = useAuthStore();
-        if (!isLoggingOut && accessToken) {
+        const authStore = useAuthStore();
+        if (!isLoggingOut && authStore.accessToken) {
           try {
             isLoggingOut = true;
             await apiClient.post(API_ROUTES.logout());
@@ -133,9 +130,7 @@ apiClient.interceptors.response.use(
 
         console.error('Refresh token failed', error);
 
-        const { clearUser } = useUserStore();
-        clearStore();
-        clearUser();
+        authStore.clearStore();
         router.push({ path: ROUTES.login });
 
         return Promise.reject(error);

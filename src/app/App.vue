@@ -8,7 +8,7 @@ import { ProgressCircular } from 'shared/ui/progress-circular';
     <HeaderBar />
 
     <v-container max-width="1920px">
-      <v-main class="h-screen">
+      <v-main class="h-100">
         <RouterView v-slot="{ Component, route }">
           <template v-if="Component">
             <Suspense>
