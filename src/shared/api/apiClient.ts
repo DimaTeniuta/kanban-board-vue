@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
 import { router } from 'app/router';
 import { ROUTES } from 'shared/constants/routes';
@@ -14,6 +14,10 @@ export const apiClient = axios.create({
   }
 });
 
+interface RetryableRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
 apiClient.interceptors.request.use(
   (config) => {
     const authStore = useAuthStore();
@@ -26,11 +30,26 @@ apiClient.interceptors.request.use(
 );
 
 interface RefreshTokenResponse {
-  data: {
-    accessToken: string;
-    refreshToken: string;
-  };
+  accessToken: string;
+  refreshToken: string;
 }
+
+const isAuthRetryExcluded = (url?: string): boolean => {
+  if (!url) {
+    return false;
+  }
+
+  return url.includes('refresh-token') || url.includes('logout');
+};
+
+const forceLogout = async (): Promise<void> => {
+  const authStore = useAuthStore();
+  authStore.clearStore();
+
+  if (router.currentRoute.value.path !== ROUTES.login) {
+    await router.push({ path: ROUTES.login });
+  }
+};
 
 const refreshToken = async (): Promise<{ status: boolean }> => {
   try {
@@ -46,13 +65,13 @@ const refreshToken = async (): Promise<{ status: boolean }> => {
     });
 
     if (response.status === 200 || response.status === 201) {
-      const tokenData = response.data.data;
-      authStore.setTokens({ accessToken: tokenData.accessToken, refreshToken: tokenData.refreshToken });
+      const { accessToken, refreshToken: nextRefreshToken } = response.data;
+      authStore.setTokens({ accessToken, refreshToken: nextRefreshToken });
       return { status: true };
-    } else {
-      console.error('Refresh token failed', response);
-      return { status: false };
     }
+
+    console.error('Refresh token failed', response);
+    return { status: false };
   } catch (error) {
     console.error('Refresh token failed', error);
     return { status: false };
@@ -62,84 +81,90 @@ const refreshToken = async (): Promise<{ status: boolean }> => {
 const UNAUTHORIZED_ERROR_CODE = 401;
 
 let isRefreshing = false;
-let isLoggingOut = false;
-let refreshSubscribers: Array<(token: string) => void> = [];
 
-const callFailedRequests = (token: string) => {
-  refreshSubscribers.forEach((callback) => callback(token));
+interface RefreshSubscriber {
+  resolve: (token: string) => void;
+  reject: (reason: unknown) => void;
+}
+
+let refreshSubscribers: RefreshSubscriber[] = [];
+
+const onRefreshed = (token: string): void => {
+  refreshSubscribers.forEach(({ resolve }) => resolve(token));
   refreshSubscribers = [];
 };
 
-const addSubscriber = (callback: (token: string) => void) => {
-  refreshSubscribers.push(callback);
+const onRefreshFailed = (reason: unknown): void => {
+  refreshSubscribers.forEach(({ reject }) => reject(reason));
+  refreshSubscribers = [];
 };
+
+const subscribeTokenRefresh = (): Promise<string> =>
+  new Promise((resolve, reject) => {
+    refreshSubscribers.push({ resolve, reject });
+  });
 
 apiClient.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  async (error: AxiosError) => {
+    const originalRequest = error.config as RetryableRequestConfig | undefined;
 
     if (
-      originalRequest &&
-      error.response?.status === UNAUTHORIZED_ERROR_CODE &&
-      !originalRequest.url.includes(API_ROUTES.refreshToken())
+      !originalRequest ||
+      error.response?.status !== UNAUTHORIZED_ERROR_CODE ||
+      isAuthRetryExcluded(originalRequest.url)
     ) {
-      if (isRefreshing) {
-        return new Promise((resolve) => {
-          addSubscriber((token: string) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            resolve(axios(originalRequest));
-          });
-        });
-      }
-
-      isRefreshing = true;
-
-      try {
-        const tokens = await refreshToken();
-
-        if (tokens.status) {
-          const authStore = useAuthStore();
-          if (!authStore.accessToken) {
-            throw new Error('Token is not found');
-          }
-
-          callFailedRequests(authStore.accessToken);
-          originalRequest.headers.Authorization = `Bearer ${authStore.accessToken}`;
-
-          return apiClient(originalRequest);
-        } else {
-          const authStore = useAuthStore();
-          if (!isLoggingOut && authStore.accessToken) {
-            isLoggingOut = true;
-            await apiClient.post(API_ROUTES.logout());
-          }
-          authStore.clearStore();
-          router.push({ path: ROUTES.login });
-        }
-      } catch (error) {
-        const authStore = useAuthStore();
-        if (!isLoggingOut && authStore.accessToken) {
-          try {
-            isLoggingOut = true;
-            await apiClient.post(API_ROUTES.logout());
-          } catch (error) {
-            console.error('Logout failed', error);
-          }
-        }
-
-        console.error('Refresh token failed', error);
-
-        authStore.clearStore();
-        router.push({ path: ROUTES.login });
-
-        return Promise.reject(error);
-      } finally {
-        isRefreshing = false;
-        isLoggingOut = false;
-      }
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
+    if (originalRequest._retry) {
+      onRefreshFailed(error);
+      await forceLogout();
+      return Promise.reject(error);
+    }
+
+    if (isRefreshing) {
+      return subscribeTokenRefresh()
+        .then((token) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return apiClient(originalRequest);
+        })
+        .catch(async (refreshError) => {
+          await forceLogout();
+          return Promise.reject(refreshError);
+        });
+    }
+
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    try {
+      const tokens = await refreshToken();
+
+      if (!tokens.status) {
+        onRefreshFailed(error);
+        await forceLogout();
+        return Promise.reject(error);
+      }
+
+      const accessToken = useAuthStore().accessToken;
+
+      if (!accessToken) {
+        onRefreshFailed(error);
+        await forceLogout();
+        return Promise.reject(error);
+      }
+
+      onRefreshed(accessToken);
+      originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+
+      return apiClient(originalRequest);
+    } catch (refreshError) {
+      onRefreshFailed(refreshError);
+      await forceLogout();
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
+    }
   }
 );
