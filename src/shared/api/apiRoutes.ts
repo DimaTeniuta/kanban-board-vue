@@ -4,5 +4,7 @@ export const API_ROUTES = {
   refreshToken: (): string => '/auth/refresh-token',
   logout: (): string => '/auth/logout',
   boards: (): string => '/boards',
-  boardById: (id: string): string => `/boards/${id}`
+  boardById: (id: string): string => `/boards/${id}`,
+  columns: (boardId: string): string => `/boards/${boardId}/columns`,
+  columnById: (boardId: string, columnId: string): string => `/boards/${boardId}/columns/${columnId}`
 } as const;
