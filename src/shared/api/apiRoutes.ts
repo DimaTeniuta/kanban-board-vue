@@ -7,7 +7,10 @@ export const API_ROUTES = {
   boardById: (id: string): string => `/boards/${id}`,
   columns: (boardId: string): string => `/boards/${boardId}/columns`,
   columnById: (boardId: string, columnId: string): string => `/boards/${boardId}/columns/${columnId}`,
+  columnOrder: (boardId: string, columnId: string): string => `/boards/${boardId}/columns/${columnId}/order`,
   tasks: (boardId: string, columnId: string): string => `/boards/${boardId}/columns/${columnId}/tasks`,
   taskById: (boardId: string, columnId: string, taskId: string): string =>
-    `/boards/${boardId}/columns/${columnId}/tasks/${taskId}`
+    `/boards/${boardId}/columns/${columnId}/tasks/${taskId}`,
+  taskOrder: (boardId: string, columnId: string, taskId: string): string =>
+    `/boards/${boardId}/columns/${columnId}/tasks/${taskId}/order`
 } as const;

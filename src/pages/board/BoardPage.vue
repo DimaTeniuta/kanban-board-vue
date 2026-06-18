@@ -1,9 +1,16 @@
 <script setup lang="ts">
+import { DnDProvider } from '@vue-dnd-kit/core';
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { ColumnCard, ColumnFormDialog, ColumnsEmptyState, DeleteColumnDialog } from 'features/column';
-import { DeleteTaskDialog, TaskFormDialog } from 'features/task';
+import {
+  ColumnFormDialog,
+  ColumnsEmptyState,
+  ColumnsList,
+  DeleteColumnDialog,
+  DeleteTaskDialog,
+  TaskFormDialog
+} from 'features/column';
 import type { Column } from 'entities/column';
 import type { Task } from 'entities/task';
 import { ROUTES } from 'shared/constants/routes';
@@ -103,19 +110,17 @@ const navigateToBoards = (): void => {
 
     <ColumnsEmptyState v-else-if="!hasColumns" @create="openCreateColumnDialog" />
 
-    <div v-else class="d-flex flex-start ga-4 overflow-x-auto pb-4">
-      <ColumnCard
-        v-for="column in columns"
-        :key="column.id"
+    <DnDProvider v-else :auto-scroll-viewport="true" preview-to="body">
+      <ColumnsList
         :board-id="boardId"
-        :column="column"
+        :columns="columns"
         @edit="openEditColumnDialog"
         @delete="openDeleteColumnDialog"
         @add-task="openCreateTaskDialog"
         @edit-task="openEditTaskDialog"
         @delete-task="openDeleteTaskDialog"
       />
-    </div>
+    </DnDProvider>
 
     <ColumnFormDialog
       v-if="isColumnFormDialogOpen"
