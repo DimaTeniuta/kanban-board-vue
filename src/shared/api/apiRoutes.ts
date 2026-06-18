@@ -6,5 +6,8 @@ export const API_ROUTES = {
   boards: (): string => '/boards',
   boardById: (id: string): string => `/boards/${id}`,
   columns: (boardId: string): string => `/boards/${boardId}/columns`,
-  columnById: (boardId: string, columnId: string): string => `/boards/${boardId}/columns/${columnId}`
+  columnById: (boardId: string, columnId: string): string => `/boards/${boardId}/columns/${columnId}`,
+  tasks: (boardId: string, columnId: string): string => `/boards/${boardId}/columns/${columnId}/tasks`,
+  taskById: (boardId: string, columnId: string, taskId: string): string =>
+    `/boards/${boardId}/columns/${columnId}/tasks/${taskId}`
 } as const;

@@ -1,7 +1,6 @@
 import { useQueryClient } from '@tanstack/vue-query';
 
-import { API_ROUTES } from 'shared/api/apiRoutes';
-import { useApiMutation } from 'shared/api/composable/useApi';
+import { API_ROUTES, useApiMutation } from 'shared/api';
 
 import { COLUMNS_QUERY_KEY } from '../constants';
 import { type Column } from '../types/column';

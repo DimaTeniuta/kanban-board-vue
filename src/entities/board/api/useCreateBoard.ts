@@ -1,8 +1,7 @@
 import { useQueryClient } from '@tanstack/vue-query';
 
 import { type Board, BOARDS_QUERY_KEY } from 'entities/board';
-import { API_ROUTES } from 'shared/api/apiRoutes';
-import { useApiMutation } from 'shared/api/composable/useApi';
+import { API_ROUTES, useApiMutation } from 'shared/api';
 
 import type { BoardFormValues } from '../types/boardForm';
 

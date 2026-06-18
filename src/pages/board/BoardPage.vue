@@ -3,7 +3,9 @@ import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { ColumnCard, ColumnFormDialog, ColumnsEmptyState, DeleteColumnDialog } from 'features/column';
+import { DeleteTaskDialog, TaskFormDialog } from 'features/task';
 import type { Column } from 'entities/column';
+import type { Task } from 'entities/task';
 import { ROUTES } from 'shared/constants/routes';
 import { ProgressCircular } from 'shared/ui/progress-circular';
 
@@ -20,23 +22,46 @@ const { columns, hasColumns, isPending: isColumnsPending } = useGetColumns(board
 
 const isLoading = computed(() => isBoardPending.value || isColumnsPending.value);
 
-const isFormDialogOpen = ref(false);
-const isDeleteDialogOpen = ref(false);
+const isColumnFormDialogOpen = ref(false);
+const isColumnDeleteDialogOpen = ref(false);
 const selectedColumn = ref<Column | null>(null);
 
-const openCreateDialog = (): void => {
+const isTaskFormDialogOpen = ref(false);
+const isTaskDeleteDialogOpen = ref(false);
+const selectedTask = ref<Task | null>(null);
+const selectedTaskColumn = ref<Column | null>(null);
+
+const openCreateColumnDialog = (): void => {
   selectedColumn.value = null;
-  isFormDialogOpen.value = true;
+  isColumnFormDialogOpen.value = true;
 };
 
-const openEditDialog = (column: Column): void => {
+const openEditColumnDialog = (column: Column): void => {
   selectedColumn.value = column;
-  isFormDialogOpen.value = true;
+  isColumnFormDialogOpen.value = true;
 };
 
-const openDeleteDialog = (column: Column): void => {
+const openDeleteColumnDialog = (column: Column): void => {
   selectedColumn.value = column;
-  isDeleteDialogOpen.value = true;
+  isColumnDeleteDialogOpen.value = true;
+};
+
+const openCreateTaskDialog = (column: Column): void => {
+  selectedTask.value = null;
+  selectedTaskColumn.value = column;
+  isTaskFormDialogOpen.value = true;
+};
+
+const openEditTaskDialog = ({ column, task }: { column: Column; task: Task }): void => {
+  selectedTask.value = task;
+  selectedTaskColumn.value = column;
+  isTaskFormDialogOpen.value = true;
+};
+
+const openDeleteTaskDialog = ({ column, task }: { column: Column; task: Task }): void => {
+  selectedTask.value = task;
+  selectedTaskColumn.value = column;
+  isTaskDeleteDialogOpen.value = true;
 };
 
 const navigateToBoards = (): void => {
@@ -66,7 +91,7 @@ const navigateToBoards = (): void => {
         variant="flat"
         size="large"
         prepend-icon="mdi-plus"
-        @click="openCreateDialog"
+        @click="openCreateColumnDialog"
       >
         Add column
       </v-btn>
@@ -76,31 +101,52 @@ const navigateToBoards = (): void => {
       <ProgressCircular size="large" color="primary" />
     </div>
 
-    <ColumnsEmptyState v-else-if="!hasColumns" @create="openCreateDialog" />
+    <ColumnsEmptyState v-else-if="!hasColumns" @create="openCreateColumnDialog" />
 
     <div v-else class="d-flex flex-start ga-4 overflow-x-auto pb-4">
       <ColumnCard
         v-for="column in columns"
         :key="column.id"
+        :board-id="boardId"
         :column="column"
-        @edit="openEditDialog"
-        @delete="openDeleteDialog"
+        @edit="openEditColumnDialog"
+        @delete="openDeleteColumnDialog"
+        @add-task="openCreateTaskDialog"
+        @edit-task="openEditTaskDialog"
+        @delete-task="openDeleteTaskDialog"
       />
     </div>
 
     <ColumnFormDialog
-      v-if="isFormDialogOpen"
-      :key="selectedColumn?.id ?? 'create'"
-      v-model="isFormDialogOpen"
+      v-if="isColumnFormDialogOpen"
+      :key="selectedColumn?.id ?? 'create-column'"
+      v-model="isColumnFormDialogOpen"
       :board-id="boardId"
       :column="selectedColumn"
     />
 
     <DeleteColumnDialog
       v-if="selectedColumn"
-      v-model="isDeleteDialogOpen"
+      v-model="isColumnDeleteDialogOpen"
       :board-id="boardId"
       :column="selectedColumn"
+    />
+
+    <TaskFormDialog
+      v-if="isTaskFormDialogOpen && selectedTaskColumn"
+      :key="selectedTask?.id ?? `create-task-${selectedTaskColumn.id}`"
+      v-model="isTaskFormDialogOpen"
+      :board-id="boardId"
+      :column-id="selectedTaskColumn.id"
+      :task="selectedTask"
+    />
+
+    <DeleteTaskDialog
+      v-if="selectedTask && selectedTaskColumn"
+      v-model="isTaskDeleteDialogOpen"
+      :board-id="boardId"
+      :column-id="selectedTaskColumn.id"
+      :task="selectedTask"
     />
   </div>
 </template>
