@@ -5,10 +5,16 @@ import { ROUTES } from 'shared/constants/routes';
 import { useAuthStore } from 'shared/store';
 
 import { API_ROUTES } from './apiRoutes';
+import { isLoopbackUrl } from './isLoopbackUrl';
+
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+const usesLoopbackApi = isLoopbackUrl(apiBaseUrl);
 
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: apiBaseUrl,
   timeout: 60_000,
+  adapter: usesLoopbackApi ? 'fetch' : undefined,
+  fetchOptions: usesLoopbackApi ? { targetAddressSpace: 'loopback' } : undefined,
   headers: {
     'Content-Type': 'application/json'
   }
