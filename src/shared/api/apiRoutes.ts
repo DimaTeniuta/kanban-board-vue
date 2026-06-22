@@ -3,6 +3,7 @@ export const API_ROUTES = {
   login: (): string => '/auth/login',
   refreshToken: (): string => '/auth/refresh-token',
   logout: (): string => '/auth/logout',
+  profile: (): string => '/users/profile',
   boards: (): string => '/boards',
   boardById: (id: string): string => `/boards/${id}`,
   columns: (boardId: string): string => `/boards/${boardId}/columns`,

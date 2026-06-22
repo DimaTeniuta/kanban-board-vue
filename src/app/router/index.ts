@@ -36,6 +36,17 @@ export const router = createRouter({
       component: defineAsyncComponent({
         loader: () => import('pages/board/BoardPage.vue')
       })
+    },
+    {
+      path: `${ROUTES.profile}`,
+      name: 'ProfilePage',
+      component: defineAsyncComponent({
+        loader: () => import('pages/profile/ProfilePage.vue')
+      })
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: ROUTES.login
     }
   ]
 });
