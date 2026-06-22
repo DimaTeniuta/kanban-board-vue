@@ -3,17 +3,11 @@ import { DnDProvider } from '@vue-dnd-kit/core';
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import {
-  ColumnFormDialog,
-  ColumnsEmptyState,
-  ColumnsList,
-  DeleteColumnDialog,
-  DeleteTaskDialog,
-  TaskFormDialog
-} from 'features/column';
+import { ColumnFormDialog, ColumnsList, DeleteColumnDialog, DeleteTaskDialog, TaskFormDialog } from 'features/column';
 import type { Column } from 'entities/column';
 import type { Task } from 'entities/task';
 import { ROUTES } from 'shared/constants/routes';
+import { EmptyState } from 'shared/ui/empty-state';
 import { PageHeader } from 'shared/ui/page-header';
 import { ProgressCircular } from 'shared/ui/progress-circular';
 
@@ -102,7 +96,14 @@ const navigateToBoards = (): void => {
       <ProgressCircular size="large" color="primary" />
     </div>
 
-    <ColumnsEmptyState v-else-if="!hasColumns" @create="openCreateColumnDialog" />
+    <EmptyState
+      v-else-if="!hasColumns"
+      icon="mdi-view-column-outline"
+      title="No columns yet"
+      description="Create your first column to start organizing tasks."
+      action-label="Create column"
+      @action="openCreateColumnDialog"
+    />
 
     <DnDProvider v-else :auto-scroll-viewport="true" preview-to="body">
       <ColumnsList

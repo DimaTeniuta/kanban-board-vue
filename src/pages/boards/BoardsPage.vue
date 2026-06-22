@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-import { BoardCard, BoardFormDialog, BoardsEmptyState, DeleteBoardDialog } from 'features/board';
+import { BoardCard, BoardFormDialog, DeleteBoardDialog } from 'features/board';
 import type { Board } from 'entities/board';
+import { EmptyState } from 'shared/ui/empty-state';
 import { PageHeader } from 'shared/ui/page-header';
 import { ProgressCircular } from 'shared/ui/progress-circular';
 
@@ -53,7 +54,14 @@ const openDeleteDialog = (board: Board): void => {
       </v-col>
     </v-row>
 
-    <BoardsEmptyState v-else-if="!hasBoards" @create="openCreateDialog" />
+    <EmptyState
+      v-else-if="!hasBoards"
+      icon="mdi-view-dashboard-outline"
+      title="No boards yet"
+      description="Create your first board to start organizing tasks in columns."
+      action-label="Create board"
+      @action="openCreateDialog"
+    />
 
     <v-row v-else class="mt-0">
       <v-col v-for="board in boards" :key="board.id" cols="12" sm="6" md="4" lg="3">
