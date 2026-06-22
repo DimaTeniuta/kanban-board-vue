@@ -5,8 +5,13 @@ import vuetifyPlugin from 'vite-plugin-vuetify';
 import vueJsxPlugin from '@vitejs/plugin-vue-jsx';
 import vueDevToolsPlugin from 'vite-plugin-vue-devtools';
 
-export default defineConfig({
-  plugins: [vuePlugin(), vuetifyPlugin({ autoImport: true }), vueJsxPlugin(), vueDevToolsPlugin()],
+export default defineConfig(({ mode }) => ({
+  plugins: [
+    vuePlugin(),
+    vuetifyPlugin({ autoImport: true }),
+    vueJsxPlugin(),
+    mode === 'development' && vueDevToolsPlugin()
+  ].filter(Boolean),
   resolve: {
     alias: {
       app: fileURLToPath(new URL('./src/app', import.meta.url)),
@@ -23,4 +28,4 @@ export default defineConfig({
     port: 3000,
     open: true
   }
-});
+}));
