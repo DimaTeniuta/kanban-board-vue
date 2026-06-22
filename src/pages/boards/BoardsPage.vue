@@ -3,6 +3,7 @@ import { ref } from 'vue';
 
 import { BoardCard, BoardFormDialog, BoardsEmptyState, DeleteBoardDialog } from 'features/board';
 import type { Board } from 'entities/board';
+import { PageHeader } from 'shared/ui/page-header';
 import { ProgressCircular } from 'shared/ui/progress-circular';
 
 import { useGetBoards } from './composable/useGetBoards';
@@ -31,23 +32,20 @@ const openDeleteDialog = (board: Board): void => {
 
 <template>
   <div class="py-8">
-    <div class="d-flex justify-space-between items-center mb-8">
-      <div>
-        <h1 class="text-headline-large font-weight-bold mb-1">My boards</h1>
-        <p class="text-body-large text-medium-emphasis mb-0">Manage your kanban boards</p>
-      </div>
-
-      <v-btn
-        v-if="hasBoards"
-        color="primary"
-        variant="flat"
-        size="large"
-        prepend-icon="mdi-plus"
-        @click="openCreateDialog"
-      >
-        Create board
-      </v-btn>
-    </div>
+    <PageHeader title="My boards" description="Manage your kanban boards">
+      <template #actions>
+        <v-btn
+          v-if="hasBoards"
+          color="primary"
+          variant="flat"
+          size="large"
+          prepend-icon="mdi-plus"
+          @click="openCreateDialog"
+        >
+          Create board
+        </v-btn>
+      </template>
+    </PageHeader>
 
     <v-row v-if="isPending" class="h-100">
       <v-col cols="12">

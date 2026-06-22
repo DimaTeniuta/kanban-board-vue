@@ -6,6 +6,7 @@ import { EditProfileDialog } from 'features/profile';
 import { useGetProfile, type User } from 'entities/user';
 import { ROUTES } from 'shared/constants/routes';
 import { useAuthStore } from 'shared/store';
+import { PageHeader } from 'shared/ui/page-header';
 import { ProgressCircular } from 'shared/ui/progress-circular';
 
 const router = useRouter();
@@ -32,14 +33,11 @@ const handleProfileUpdate = (updatedUser: User): void => {
 
 <template>
   <div class="py-8">
-    <div class="d-flex align-center ga-4 mb-8">
-      <v-btn icon="mdi-arrow-left" variant="text" @click="navigateToBoards" />
-
-      <div>
-        <h1 class="text-headline-large font-weight-bold mb-1">Profile</h1>
-        <p class="text-body-large text-medium-emphasis mb-0">Your account information</p>
-      </div>
-    </div>
+    <PageHeader title="Profile" description="Your account information">
+      <template #back>
+        <v-btn icon="mdi-arrow-left" variant="text" @click="navigateToBoards" />
+      </template>
+    </PageHeader>
 
     <ProgressCircular v-if="isPending && !currentUser" size="large" color="primary" />
 

@@ -14,6 +14,7 @@ import {
 import type { Column } from 'entities/column';
 import type { Task } from 'entities/task';
 import { ROUTES } from 'shared/constants/routes';
+import { PageHeader } from 'shared/ui/page-header';
 import { ProgressCircular } from 'shared/ui/progress-circular';
 
 import { useGetBoard } from './composable/useGetBoard';
@@ -78,31 +79,24 @@ const navigateToBoards = (): void => {
 
 <template>
   <div class="py-8">
-    <div class="d-flex justify-space-between align-center mb-8">
-      <div class="d-flex align-center ga-4">
+    <PageHeader :title="board?.title ?? 'Board'" :description="board?.description ?? undefined">
+      <template #back>
         <v-btn icon="mdi-arrow-left" variant="text" @click="navigateToBoards" />
+      </template>
 
-        <div>
-          <h1 class="text-headline-large font-weight-bold mb-1">
-            {{ board?.title ?? 'Board' }}
-          </h1>
-          <p v-if="board?.description" class="text-body-large text-medium-emphasis mb-0">
-            {{ board.description }}
-          </p>
-        </div>
-      </div>
-
-      <v-btn
-        v-if="hasColumns"
-        color="primary"
-        variant="flat"
-        size="large"
-        prepend-icon="mdi-plus"
-        @click="openCreateColumnDialog"
-      >
-        Add column
-      </v-btn>
-    </div>
+      <template #actions>
+        <v-btn
+          v-if="hasColumns"
+          color="primary"
+          variant="flat"
+          size="large"
+          prepend-icon="mdi-plus"
+          @click="openCreateColumnDialog"
+        >
+          Add column
+        </v-btn>
+      </template>
+    </PageHeader>
 
     <div v-if="isLoading" class="d-flex justify-center py-16">
       <ProgressCircular size="large" color="primary" />
